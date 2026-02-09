@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /build
 
@@ -10,21 +10,19 @@ COPY pom.xml .
 COPY src ./src
 
 # Build avec Maven
-RUN apk add --no-cache maven && \
-    mvn clean package -DskipTests && \
+RUN mvn clean package -DskipTests && \
     ls -la target/
 
 # Stage 2: Runtime
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 # Labels
-LABEL maintainer="Model Technologie <business.modeltech@gmail.com>"
+LABEL maintainer="Model Technologie <dplionnel@gmail.com>"
 LABEL description="Model Technologie Backend API - Spring Boot Application"
 LABEL version="0.1.0"
 
 # Créer un user non-root pour sécurité
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser
+RUN useradd -m -u 10000 appuser
 
 WORKDIR /app
 

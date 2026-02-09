@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
  * ProjectGallery entity - Represents final projects completed by alumni
  */
 @Entity
-@Table(name = "project_gallery")
+@Table(name = "project_galleries")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

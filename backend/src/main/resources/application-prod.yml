@@ -27,6 +27,12 @@ logging:
     max-history: 30
     total-size-cap: 1GB
 
+
+# Ajouter à la fin :
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000  # 1 heure en production
+
 server:
   port: 8080
   error:

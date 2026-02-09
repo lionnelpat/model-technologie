@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/bootcamps")
+@RequestMapping("/v1/bootcamps")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Bootcamp Management", description = "APIs for managing bootcamps")

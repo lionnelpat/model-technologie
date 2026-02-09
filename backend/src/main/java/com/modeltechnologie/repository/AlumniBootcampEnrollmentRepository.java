@@ -24,6 +24,6 @@ public interface AlumniBootcampEnrollmentRepository extends JpaRepository<Alumni
     @Query("SELECT ae FROM AlumniBootcampEnrollment ae WHERE ae.certificateIssued = true AND ae.isActive = true")
     List<AlumniBootcampEnrollment> findCertifiedEnrollments();
 
-    @Query("SELECT COUNT(ae) FROM AlumniBootcampEnrollment ae WHERE ae.bootcampSessionId = :sessionId AND ae.status = 'COMPLETED'")
+    @Query("SELECT COUNT(ae) FROM AlumniBootcampEnrollment ae WHERE ae.bootcampSession.id = :sessionId AND ae.status = 'COMPLETED'")
     Long countCompletedBySession(@Param("sessionId") Long sessionId);
 }

@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/v1/")
 @Slf4j
 @Tag(name = "Health Check", description = "APIs for monitoring")
 public class HealthController {

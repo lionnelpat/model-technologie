@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/alumni")
+@RequestMapping("/v1/alumni")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Alumni Management", description = "APIs for managing alumni")
