@@ -1,6 +1,7 @@
 # 📚 Model Technologie - Backend & Infrastructure
 
 Transformation numérique de Model Technologie avec une architecture moderne **monorepo** Frontend + Backend.
+Ce projet permettra a Model tech de se positionner comme une référence en Afrique Francophone pour les solutions technologiques innovantes.
 
 ---
 
