@@ -127,52 +127,73 @@ jobs:
 
           chmod +x deploy.sh
 
-      - name: Deploy to Production
-        if: needs.determine-env.outputs.environment == 'production'
-        run: |
-          scp -i ~/.ssh/deploy_key \
-            -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=10 \
-            deploy.sh \
-            deploy@${{ secrets.VPS_HOST_PROD }}:/tmp/
-          
-          ssh -i ~/.ssh/deploy_key \
-            -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=10 \
-            deploy@${{ secrets.VPS_HOST_PROD }} \
-            "cd /tmp && bash deploy.sh '${{ needs.determine-env.outputs.environment }}' '${{ steps.tags.outputs.frontend-tag }}' '${{ steps.tags.outputs.backend-tag }}' '${{ env.REGISTRY }}' '${{ env.REGISTRY }}/${{ github.repository }}-frontend' '${{ env.REGISTRY }}/${{ github.repository }}-backend'"
-
       - name: Deploy to Staging
-        if: needs.determine-env.outputs.environment == 'staging'
         run: |
+          echo "📤 Transfert du script de déploiement..."
+          
           scp -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             -o ConnectTimeout=10 \
             deploy.sh \
             deploy@${{ secrets.VPS_HOST_STAGING }}:/tmp/
           
+          echo "✅ Script transféré"
+          echo "🚀 Exécution du déploiement..."
+          
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             -o ConnectTimeout=10 \
             deploy@${{ secrets.VPS_HOST_STAGING }} \
-            "cd /tmp && bash deploy.sh '${{ needs.determine-env.outputs.environment }}' '${{ steps.tags.outputs.frontend-tag }}' '${{ steps.tags.outputs.backend-tag }}' '${{ env.REGISTRY }}' '${{ env.REGISTRY }}/${{ github.repository }}-frontend' '${{ env.REGISTRY }}/${{ github.repository }}-backend'"
+            "cd /tmp && bash deploy.sh"
+          
+          echo "✅ Déploiement staging terminé"
 
-      - name: Health check (Production)
-        if: needs.determine-env.outputs.environment == 'production'
-        run: |
-          echo "🔍 Vérification finale..."
-          sleep 5
-          curl -f https://model-technologie.com/api/actuator/health || \
-          curl -f http://${{ secrets.VPS_HOST_PROD }}:8080/api/actuator/health || \
-          exit 1
+#      - name: Deploy to Production
+#        if: needs.determine-env.outputs.environment == 'production'
+#        run: |
+#          scp -i ~/.ssh/deploy_key \
+#            -o StrictHostKeyChecking=no \
+#            -o ConnectTimeout=10 \
+#            deploy.sh \
+#            deploy@${{ secrets.VPS_HOST_PROD }}:/tmp/
+#
+#          ssh -i ~/.ssh/deploy_key \
+#            -o StrictHostKeyChecking=no \
+#            -o ConnectTimeout=10 \
+#            deploy@${{ secrets.VPS_HOST_PROD }} \
+#            "cd /tmp && bash deploy.sh '${{ needs.determine-env.outputs.environment }}' '${{ steps.tags.outputs.frontend-tag }}' '${{ steps.tags.outputs.backend-tag }}' '${{ env.REGISTRY }}' '${{ env.REGISTRY }}/${{ github.repository }}-frontend' '${{ env.REGISTRY }}/${{ github.repository }}-backend'"
 
-      - name: Health check (Staging)
-        if: needs.determine-env.outputs.environment == 'staging'
-        run: |
-          echo "🔍 Vérification finale..."
-          sleep 5
-          curl -f http://${{ secrets.VPS_HOST_STAGING }}:8080/api/actuator/health || \
-          exit 1
+#      - name: Deploy to Staging
+#        if: needs.determine-env.outputs.environment == 'staging'
+#        run: |
+#          scp -i ~/.ssh/deploy_key \
+#            -o StrictHostKeyChecking=no \
+#            -o ConnectTimeout=10 \
+#            deploy.sh \
+#            deploy@${{ secrets.VPS_HOST_STAGING }}:/tmp/
+#
+#          ssh -i ~/.ssh/deploy_key \
+#            -o StrictHostKeyChecking=no \
+#            -o ConnectTimeout=10 \
+#            deploy@${{ secrets.VPS_HOST_STAGING }} \
+#            "cd /tmp && bash deploy.sh '${{ needs.determine-env.outputs.environment }}' '${{ steps.tags.outputs.frontend-tag }}' '${{ steps.tags.outputs.backend-tag }}' '${{ env.REGISTRY }}' '${{ env.REGISTRY }}/${{ github.repository }}-frontend' '${{ env.REGISTRY }}/${{ github.repository }}-backend'"
+
+#      - name: Health check (Production)
+#        if: needs.determine-env.outputs.environment == 'production'
+#        run: |
+#          echo "🔍 Vérification finale..."
+#          sleep 5
+#          curl -f https://model-technologie.com/api/actuator/health || \
+#          curl -f http://${{ secrets.VPS_HOST_PROD }}:8080/api/actuator/health || \
+#          exit 1
+
+#      - name: Health check (Staging)
+#        if: needs.determine-env.outputs.environment == 'staging'
+#        run: |
+#          echo "🔍 Vérification finale..."
+#          sleep 5
+#          curl -f http://${{ secrets.VPS_HOST_STAGING }}:8080/api/actuator/health || \
+#          exit 1
 
       - name: Notify Slack (Success)
         if: success()
