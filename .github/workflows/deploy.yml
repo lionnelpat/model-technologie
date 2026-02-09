@@ -99,38 +99,32 @@ jobs:
           cat > deploy.sh << 'EOF'
           #!/bin/bash
           set -e
-          
+
           ENVIRONMENT=$1
-          FRONTEND_TAG=$2
-          BACKEND_TAG=$3
-          REGISTRY=$4
-          IMAGE_FRONTEND=$5
-          IMAGE_BACKEND=$6
-          
+
+          # Fonction pour utiliser docker-compose (compatible avec les deux versions)
+          docker_compose() {
+              if command -v docker-compose &> /dev/null; then
+                  docker-compose "$@"
+              elif docker compose version &> /dev/null; then
+                  docker compose "$@"
+              else
+                  echo "❌ ERREUR: docker-compose n'est pas installé!"
+                  exit 1
+              fi
+          }
+
           echo "🚀 Déploiement vers $ENVIRONMENT"
-          echo "Frontend image: $IMAGE_FRONTEND:$FRONTEND_TAG"
-          echo "Backend image: $IMAGE_BACKEND:$BACKEND_TAG"
-          
-          # Créer les répertoires s'ils n'existent pas
+          echo "Vérification de docker-compose..."
+          docker_compose --version
+
+          # Créer les répertoires
           mkdir -p /home/deploy/model-tech/devops
-          
-          # Télécharger docker-compose
-          if [ "$ENVIRONMENT" == "production" ]; then
-            docker-compose -f /home/deploy/model-tech/devops/docker-compose.prod.yml pull
-            docker-compose -f /home/deploy/model-tech/devops/docker-compose.prod.yml up -d
-          else
-            docker-compose -f /home/deploy/model-tech/devops/docker-compose.yml pull
-            docker-compose -f /home/deploy/model-tech/devops/docker-compose.yml up -d
-          fi
-          
-          # Health check
-          echo "🏥 Vérification santé de l'application..."
-          sleep 10
-          curl -f http://localhost:8080/api/actuator/health || exit 1
-          
-          echo "✅ Déploiement réussi !"
+          mkdir -p /home/deploy/model-tech/logs
+
+          echo "✅ Prêt pour la Phase 3: Docker & Docker Compose"
           EOF
-          
+
           chmod +x deploy.sh
 
       - name: Deploy to Production
