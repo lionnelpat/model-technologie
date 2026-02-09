@@ -146,6 +146,10 @@ devops/*.key
 devops/*.crt
 devops/.acme.sh/
 devops/logs/*
+<<<<<<< HEAD
+=======
+
+>>>>>>> feature/setup-backend
 # Dozzle (monitoring)
 devops/dozzle/data/
 

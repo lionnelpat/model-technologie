@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: Model Technologie Backend
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/model_tech_dev
+    username: postgres
+    password: postgres_dev_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create-drop  # Hibernate crée/drop les tables
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+  # ⚠️ DÉSACTIVER FLYWAY EN DEV
+  flyway:
+    enabled: false  # ← KEY CHANGE
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+logging:
+  level:
+    root: INFO
+    com.modeltechnologie: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+
+jwt:
+  secret: dev_secret_key_not_secure_change_in_production
+  expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+info:
+  app:
+    name: Model Technologie Backend
+    version: 0.1.0
