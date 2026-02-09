@@ -1,0 +1,184 @@
+name: Deploy to VPS
+
+# 🔥 Se déclenche APRÈS les workflows frontend et backend
+# C'est-à-dire, une fois les images Docker poussées
+on:
+  push:
+    branches:
+      - main      # Production
+      - staging   # Staging
+    paths:
+      - 'devops/**'
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/deploy.yml'
+
+  # Permet aussi un déploiement manuel
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment à déployer'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  determine-env:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      vps-host: ${{ steps.set-env.outputs.vps-host }}
+      vps-user: ${{ steps.set-env.outputs.vps-user }}
+    steps:
+      - name: Determine environment
+        id: set-env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event.inputs.environment }}" == "production" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "vps-host=${{ secrets.VPS_HOST_PROD }}" >> $GITHUB_OUTPUT
+            echo "vps-user=deploy" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "vps-host=${{ secrets.VPS_HOST_STAGING }}" >> $GITHUB_OUTPUT
+            echo "vps-user=deploy" >> $GITHUB_OUTPUT
+          fi
+
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to ${{ needs.determine-env.outputs.environment }}
+    needs: determine-env
+    environment: ${{ needs.determine-env.outputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ needs.determine-env.outputs.vps-host }} >> ~/.ssh/known_hosts
+
+      - name: Get image tags
+        id: tags
+        run: |
+          # Pour production: utiliser 'latest'
+          # Pour staging: utiliser le hash du commit
+          if [[ "${{ needs.determine-env.outputs.environment }}" == "production" ]]; then
+            echo "frontend-tag=latest" >> $GITHUB_OUTPUT
+            echo "backend-tag=latest" >> $GITHUB_OUTPUT
+          else
+            echo "frontend-tag=${{ github.ref_name }}-${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "backend-tag=${{ github.ref_name }}-${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create deployment script
+        run: |
+          cat > deploy.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          ENVIRONMENT=${{ needs.determine-env.outputs.environment }}
+          FRONTEND_TAG=${{ steps.tags.outputs.frontend-tag }}
+          BACKEND_TAG=${{ steps.tags.outputs.backend-tag }}
+          REGISTRY=${{ env.REGISTRY }}
+          IMAGE_FRONTEND=${{ env.REGISTRY }}/${{ github.repository }}-frontend
+          IMAGE_BACKEND=${{ env.REGISTRY }}/${{ github.repository }}-backend
+          
+          echo "🚀 Déploiement vers $ENVIRONMENT"
+          echo "Frontend image: $IMAGE_FRONTEND:$FRONTEND_TAG"
+          echo "Backend image: $IMAGE_BACKEND:$BACKEND_TAG"
+          
+          # Créer les répertoires s'ils n'existent pas
+          mkdir -p /home/deploy/model-tech/devops
+          
+          # Télécharger docker-compose
+          if [ "$ENVIRONMENT" == "production" ]; then
+            docker-compose -f /home/deploy/model-tech/devops/docker-compose.prod.yml pull
+            docker-compose -f /home/deploy/model-tech/devops/docker-compose.prod.yml up -d
+          else
+            docker-compose -f /home/deploy/model-tech/devops/docker-compose.yml pull
+            docker-compose -f /home/deploy/model-tech/devops/docker-compose.yml up -d
+          fi
+          
+          # Health check
+          echo "🏥 Vérification santé de l'application..."
+          sleep 10
+          curl -f http://localhost:8080/actuator/health || exit 1
+          
+          echo "✅ Déploiement réussi !"
+          EOF
+          
+          chmod +x deploy.sh
+
+      - name: Copy deployment script to VPS
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            deploy.sh \
+            ${{ needs.determine-env.outputs.vps-user }}@${{ needs.determine-env.outputs.vps-host }}:/tmp/
+
+      - name: Execute deployment
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            ${{ needs.determine-env.outputs.vps-user }}@${{ needs.determine-env.outputs.vps-host }} \
+            "cd /tmp && bash deploy.sh"
+
+      - name: Health check
+        run: |
+          echo "🔍 Vérification finale..."
+          sleep 5
+          curl -f https://model-technologie.com/api/actuator/health || \
+          curl -f http://${{ needs.determine-env.outputs.vps-host }}:8080/api/actuator/health || \
+          exit 1
+
+      - name: Notify Slack (Success)
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "✅ Déploiement réussi !",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*✅ Déploiement réussi*\n*Environnement:* ${{ needs.determine-env.outputs.environment }}\n*Commit:* ${{ github.sha }}\n*Branch:* ${{ github.ref_name }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify Slack (Failure)
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "❌ Déploiement échoué !",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*❌ Déploiement échoué*\n*Environnement:* ${{ needs.determine-env.outputs.environment }}\n*Commit:* ${{ github.sha }}\n*Branch:* ${{ github.ref_name }}\n*Action:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Voir le log>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

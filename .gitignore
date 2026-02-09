@@ -1,0 +1,204 @@
+# ===========================
+# GLOBAL - Fichiers système
+# ===========================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ===========================
+# ENV & SECRETS (CRITICAL)
+# ===========================
+.env
+.env.local
+.env.*.local
+.env.prod
+.env.staging
+!.env.example
+
+# ===========================
+# FRONTEND (React/Node)
+# ===========================
+frontend/node_modules/
+frontend/.npm
+frontend/.eslintcache
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+frontend/.cache/
+frontend/.parcel-cache
+frontend/.parcel-build
+frontend/coverage/
+frontend/.nyc_output
+
+# Yarn
+frontend/yarn-error.log
+frontend/yarn-debug.log*
+frontend/.yarn/cache/
+frontend/.yarn/unplugged/
+frontend/.yarn/build-state.yml
+frontend/.yarn/install-state.gz
+frontend/.pnp.*
+
+# NPM
+frontend/npm-debug.log*
+frontend/package-lock.json
+frontend/lerna-debug.log*
+
+# Logs
+frontend/logs/
+frontend/*.log
+
+# IDE Spécifique Frontend
+frontend/.vscode/settings.json
+frontend/.vscode/extensions.json
+
+# ===========================
+# BACKEND (Spring Boot/Java)
+# ===========================
+backend/target/
+backend/.classpath
+backend/.factorypath
+backend/.project
+backend/.settings/
+backend/*.class
+backend/*.jar
+backend/*.war
+backend/*.ear
+backend/*.zip
+backend/*.tar.gz
+backend/*.rar
+
+# Maven
+backend/.m2/
+backend/pom.xml.tag
+backend/pom.xml.releaseBackup
+backend/pom.xml.versionsBackup
+backend/pom.xml.next
+backend/pom.xml.bak
+backend/release.properties
+backend/dependency-reduced-pom.xml
+backend/.mvn/timing.properties
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+backend/.gradle/
+backend/build/
+backend/gradle-app.setting
+backend/gradle.properties
+
+# STS (Spring Tool Suite)
+backend/.sts4-cache/
+backend/.springBeans
+backend/.tool-versions
+
+# IDE - IntelliJ
+backend/.idea/
+backend/*.iml
+backend/*.iws
+backend/*.ipr
+backend/.idea_modules/
+backend/out/
+
+# VS Code
+backend/.vscode/
+backend/settings.json
+
+# Compilation
+backend/bin/
+backend/dist/
+backend/lib/
+
+# Database
+backend/data/
+backend/h2*.db
+
+# Logs
+backend/logs/
+backend/*.log
+
+# ===========================
+# DOCKER
+# ===========================
+docker-compose.override.yml
+
+# ===========================
+# DEVOPS / INFRASTRUCTURE
+# ===========================
+devops/.env*
+devops/postgres/data/
+devops/postgres/backup/
+devops/nginx/ssl/
+devops/certs/
+devops/*.pem
+devops/*.key
+devops/*.crt
+devops/.acme.sh/
+
+# Dozzle (monitoring)
+devops/dozzle/data/
+
+# ===========================
+# DOCUMENTATION
+# ===========================
+docs/.DS_Store
+docs/generated/
+docs/GITHUB_SAFE.md
+
+# ===========================
+# IDE GÉNÉRAL
+# ===========================
+*.orig
+*.rej
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+
+# ===========================
+# SENSIBLE DATA
+# ===========================
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+**/secrets/**
+**/credentials/**
+.aws/
+.ssh/
+
+# ===========================
+# BUILD ARTIFACTS
+# ===========================
+*.egg-info/
+__pycache__/
+*.py[cod]
+*$py.class
+dist/
+build/
+
+# ===========================
+# TEMPORARY FILES
+# ===========================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*~
+.#*
