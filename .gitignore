@@ -145,7 +145,7 @@ devops/*.pem
 devops/*.key
 devops/*.crt
 devops/.acme.sh/
-
+devops/logs/*
 # Dozzle (monitoring)
 devops/dozzle/data/
 
@@ -202,3 +202,4 @@ build/
 *~
 .#*
 /docs/setup_deploy_user.sh
+/devops/logs/nginx/error.log
