@@ -201,3 +201,4 @@ build/
 *.swp
 *~
 .#*
+/docs/setup_deploy_user.sh
