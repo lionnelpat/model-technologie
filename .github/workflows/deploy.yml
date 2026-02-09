@@ -1,7 +1,5 @@
 name: Deploy to VPS
 
-# 🔥 Se déclenche APRÈS les workflows frontend et backend
-# C'est-à-dire, une fois les images Docker poussées
 on:
   push:
     branches:
@@ -13,7 +11,6 @@ on:
       - 'frontend/**'
       - '.github/workflows/deploy.yml'
 
-  # Permet aussi un déploiement manuel
   workflow_dispatch:
     inputs:
       environment:
@@ -33,20 +30,17 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.set-env.outputs.environment }}
-      vps-host: ${{ steps.set-env.outputs.vps-host }}
-      vps-user: ${{ steps.set-env.outputs.vps-user }}
+      deploy: ${{ steps.set-env.outputs.deploy }}
     steps:
       - name: Determine environment
         id: set-env
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event.inputs.environment }}" == "production" ]]; then
             echo "environment=production" >> $GITHUB_OUTPUT
-            echo "vps-host=${{ secrets.VPS_HOST_PROD }}" >> $GITHUB_OUTPUT
-            echo "vps-user=deploy" >> $GITHUB_OUTPUT
+            echo "deploy=true" >> $GITHUB_OUTPUT
           else
             echo "environment=staging" >> $GITHUB_OUTPUT
-            echo "vps-host=${{ secrets.VPS_HOST_STAGING }}" >> $GITHUB_OUTPUT
-            echo "vps-user=deploy" >> $GITHUB_OUTPUT
+            echo "deploy=true" >> $GITHUB_OUTPUT
           fi
 
   deploy:
@@ -55,31 +49,43 @@ jobs:
     needs: determine-env
     environment: ${{ needs.determine-env.outputs.environment }}
 
-    steps:
+    # Ne pas déployer si ce n'est pas prévu
+    if: needs.determine-env.outputs.deploy == 'true'
 
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      # Nouvelle étape - Vérifier que les secrets existent
-      - name: Validate environment variables
-        run: |
-          if [ -z "${{ needs.determine-env.outputs.vps-host }}" ]; then
-            echo "❌ ERREUR: VPS_HOST n'est pas défini!"
-            exit 1
-          fi
 
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ needs.determine-env.outputs.vps-host }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Determine VPS Host
+        id: vps-config
+        run: |
+          if [[ "${{ needs.determine-env.outputs.environment }}" == "production" ]]; then
+            echo "Host is set to VPS_HOST_PROD"
+          else
+            echo "Host is set to VPS_HOST_STAGING"
+          fi
+
+      - name: Add to known_hosts (Production)
+        if: needs.determine-env.outputs.environment == 'production'
+        run: |
+          ssh-keyscan -H ${{ secrets.VPS_HOST_PROD }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "✅ SSH key added for production VPS"
+
+      - name: Add to known_hosts (Staging)
+        if: needs.determine-env.outputs.environment == 'staging'
+        run: |
+          ssh-keyscan -H ${{ secrets.VPS_HOST_STAGING }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "✅ SSH key added for staging VPS"
 
       - name: Get image tags
         id: tags
         run: |
-          # Pour production: utiliser 'latest'
-          # Pour staging: utiliser le hash du commit
           if [[ "${{ needs.determine-env.outputs.environment }}" == "production" ]]; then
             echo "frontend-tag=latest" >> $GITHUB_OUTPUT
             echo "backend-tag=latest" >> $GITHUB_OUTPUT
@@ -94,12 +100,12 @@ jobs:
           #!/bin/bash
           set -e
           
-          ENVIRONMENT=${{ needs.determine-env.outputs.environment }}
-          FRONTEND_TAG=${{ steps.tags.outputs.frontend-tag }}
-          BACKEND_TAG=${{ steps.tags.outputs.backend-tag }}
-          REGISTRY=${{ env.REGISTRY }}
-          IMAGE_FRONTEND=${{ env.REGISTRY }}/${{ github.repository }}-frontend
-          IMAGE_BACKEND=${{ env.REGISTRY }}/${{ github.repository }}-backend
+          ENVIRONMENT=$1
+          FRONTEND_TAG=$2
+          BACKEND_TAG=$3
+          REGISTRY=$4
+          IMAGE_FRONTEND=$5
+          IMAGE_BACKEND=$6
           
           echo "🚀 Déploiement vers $ENVIRONMENT"
           echo "Frontend image: $IMAGE_FRONTEND:$FRONTEND_TAG"
@@ -120,34 +126,58 @@ jobs:
           # Health check
           echo "🏥 Vérification santé de l'application..."
           sleep 10
-          curl -f http://localhost:8080/actuator/health || exit 1
+          curl -f http://localhost:8080/api/actuator/health || exit 1
           
           echo "✅ Déploiement réussi !"
           EOF
           
           chmod +x deploy.sh
 
-      - name: Copy deployment script to VPS
+      - name: Deploy to Production
+        if: needs.determine-env.outputs.environment == 'production'
         run: |
           scp -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
             deploy.sh \
-            ${{ needs.determine-env.outputs.vps-user }}@${{ needs.determine-env.outputs.vps-host }}:/tmp/
-
-      - name: Execute deployment
-        run: |
+            deploy@${{ secrets.VPS_HOST_PROD }}:/tmp/
+          
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             -o ConnectTimeout=10 \
-            ${{ needs.determine-env.outputs.vps-user }}@${{ needs.determine-env.outputs.vps-host }} \
-            "cd /tmp && bash deploy.sh"
+            deploy@${{ secrets.VPS_HOST_PROD }} \
+            "cd /tmp && bash deploy.sh '${{ needs.determine-env.outputs.environment }}' '${{ steps.tags.outputs.frontend-tag }}' '${{ steps.tags.outputs.backend-tag }}' '${{ env.REGISTRY }}' '${{ env.REGISTRY }}/${{ github.repository }}-frontend' '${{ env.REGISTRY }}/${{ github.repository }}-backend'"
 
-      - name: Health check
+      - name: Deploy to Staging
+        if: needs.determine-env.outputs.environment == 'staging'
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            deploy.sh \
+            deploy@${{ secrets.VPS_HOST_STAGING }}:/tmp/
+          
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            deploy@${{ secrets.VPS_HOST_STAGING }} \
+            "cd /tmp && bash deploy.sh '${{ needs.determine-env.outputs.environment }}' '${{ steps.tags.outputs.frontend-tag }}' '${{ steps.tags.outputs.backend-tag }}' '${{ env.REGISTRY }}' '${{ env.REGISTRY }}/${{ github.repository }}-frontend' '${{ env.REGISTRY }}/${{ github.repository }}-backend'"
+
+      - name: Health check (Production)
+        if: needs.determine-env.outputs.environment == 'production'
         run: |
           echo "🔍 Vérification finale..."
           sleep 5
           curl -f https://model-technologie.com/api/actuator/health || \
-          curl -f http://${{ needs.determine-env.outputs.vps-host }}:8080/api/actuator/health || \
+          curl -f http://${{ secrets.VPS_HOST_PROD }}:8080/api/actuator/health || \
+          exit 1
+
+      - name: Health check (Staging)
+        if: needs.determine-env.outputs.environment == 'staging'
+        run: |
+          echo "🔍 Vérification finale..."
+          sleep 5
+          curl -f http://${{ secrets.VPS_HOST_STAGING }}:8080/api/actuator/health || \
           exit 1
 
       - name: Notify Slack (Success)
