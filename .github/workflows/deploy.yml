@@ -187,13 +187,13 @@ jobs:
 #          curl -f http://${{ secrets.VPS_HOST_PROD }}:8080/api/actuator/health || \
 #          exit 1
 
-#      - name: Health check (Staging)
-#        if: needs.determine-env.outputs.environment == 'staging'
-#        run: |
-#          echo "🔍 Vérification finale..."
-#          sleep 5
-#          curl -f http://${{ secrets.VPS_HOST_STAGING }}:8080/api/actuator/health || \
-#          exit 1
+      - name: Health check (Staging)
+        if: needs.determine-env.outputs.environment == 'staging'
+        run: |
+          echo "🔍 Vérification finale..."
+          sleep 5
+          curl -f http://${{ secrets.VPS_HOST_STAGING }}:8080/api/actuator/health || \
+          exit 1
 
       - name: Notify Slack (Success)
         if: success()
