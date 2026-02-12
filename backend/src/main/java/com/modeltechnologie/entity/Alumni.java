@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
  * Alumni entity - Represents a student who completed a bootcamp
  */
 @Entity
-@Table(name = "alumni")
+@Table(name = "alumnis")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
