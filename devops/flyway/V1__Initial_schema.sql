@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS alumnis (
 -- Create alumni_bootcamp_enrollments table
 CREATE TABLE IF NOT EXISTS alumni_bootcamp_enrollments (
                                                            id BIGSERIAL PRIMARY KEY,
-                                                           alumni_id BIGINT NOT NULL REFERENCES alumni(id),
+                                                           alumni_id BIGINT NOT NULL REFERENCES alumnis(id),
                                                            bootcamp_session_id BIGINT NOT NULL REFERENCES bootcamp_sessions(id),
                                                            enrollment_date DATE NOT NULL,
                                                            completion_date DATE,
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS alumni_bootcamp_enrollments (
 -- Create project_gallery table
 CREATE TABLE IF NOT EXISTS project_galleries (
                                                id BIGSERIAL PRIMARY KEY,
-                                               alumni_id BIGINT NOT NULL REFERENCES alumni(id),
+                                               alumni_id BIGINT NOT NULL REFERENCES alumnis(id),
                                                bootcamp_session_id BIGINT NOT NULL REFERENCES bootcamp_sessions(id),
                                                project_title VARCHAR(255) NOT NULL,
                                                project_description TEXT,
