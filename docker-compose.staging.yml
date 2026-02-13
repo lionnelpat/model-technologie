@@ -29,7 +29,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/model_tech_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: s%Po&54VYGMgE5fu
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       JWT_SECRET: wTd342jUO9OrDkkmLVregA3upRLCiv0rDzxw4ZHUgFg=
       JAVA_OPTS: -Xmx512m -Xms256m -XX:+UseG1GC
     ports:
