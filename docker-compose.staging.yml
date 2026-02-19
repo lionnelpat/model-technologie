@@ -48,7 +48,7 @@ services:
       dockerfile: Dockerfile
     container_name: model-tech-frontend
     environment:
-      VITE_API_URL: https://api.staging.model-technologie.com/api
+      VITE_API_URL: https://staging.model-technologie.com/api
     ports:
       - "3001:3000"
     depends_on:
