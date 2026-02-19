@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,25 +15,45 @@ import {
   CheckCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSubmitContact } from "@/hooks/mutations/useContactMutations";
 
 const Contact = () => {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const { mutate: submitContact, isPending, isSuccess, reset } = useSubmitContact();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    const form = e.currentTarget;
+    const data = new FormData(form);
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    toast({
-      title: "Message envoyé !",
-      description: "Nous vous répondrons dans les plus brefs délais.",
-    });
+    submitContact(
+      {
+        firstName: data.get("firstName") as string,
+        lastName: data.get("lastName") as string,
+        email: data.get("email") as string,
+        phone: (data.get("phone") as string) || undefined,
+        company: (data.get("company") as string) || undefined,
+        subject: data.get("subject") as string,
+        message: data.get("message") as string,
+      },
+      {
+        onSuccess: () => {
+          form.reset();
+          toast({
+            title: "Message envoyé !",
+            description: "Nous vous répondrons dans les plus brefs délais.",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Erreur lors de l'envoi",
+            description: "Veuillez réessayer ou nous contacter directement par email.",
+            variant: "destructive",
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -63,7 +83,7 @@ const Contact = () => {
                 Envoyez-nous un message
               </h2>
 
-              {isSubmitted ? (
+              {isSuccess ? (
                 <div className="p-8 bg-accent/10 rounded-2xl border border-accent/30 text-center">
                   <CheckCircle className="h-16 w-16 text-accent mx-auto mb-4" />
                   <h3 className="font-heading text-xl font-bold text-foreground mb-2">
@@ -72,12 +92,12 @@ const Contact = () => {
                   <p className="text-muted-foreground mb-6">
                     Merci pour votre message. Notre équipe vous répondra dans les 24 heures.
                   </p>
-                  <Button onClick={() => setIsSubmitted(false)}>
+                  <Button onClick={reset}>
                     Envoyer un autre message
                   </Button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">Prénom *</Label>
@@ -151,8 +171,8 @@ const Contact = () => {
                     />
                   </div>
 
-                  <Button type="submit" size="lg" disabled={isSubmitting}>
-                    {isSubmitting ? (
+                  <Button type="submit" size="lg" disabled={isPending}>
+                    {isPending ? (
                       <>
                         <span className="animate-spin mr-2">⏳</span>
                         Envoi en cours...
