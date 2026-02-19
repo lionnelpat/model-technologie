@@ -3,6 +3,9 @@ package com.modeltechnologie.controller;
 import com.modeltechnologie.dto.BootcampCreateDTO;
 import com.modeltechnologie.dto.BootcampResponseDTO;
 import com.modeltechnologie.dto.BootcampUpdateDTO;
+import com.modeltechnologie.entity.BootcampLevel;
+import com.modeltechnologie.entity.BootcampStatus;
+import com.modeltechnologie.entity.TargetSector;
 import com.modeltechnologie.exception.DuplicateBootcampException;
 import com.modeltechnologie.service.BootcampService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -87,30 +90,24 @@ public class BootcampController {
     }
 
     @GetMapping("/level/{level}")
-    @Operation(summary = "Récupérer les bootcamps par niveau")
-    public ResponseEntity<List<BootcampResponseDTO>> getBootcampsByLevel(@PathVariable String level) {
+    @Operation(summary = "Récupérer les bootcamps par niveau (FOUNDATION, PRACTITIONER, PROFESSIONAL)")
+    public ResponseEntity<List<BootcampResponseDTO>> getBootcampsByLevel(@PathVariable BootcampLevel level) {
         log.debug("Requête de récupération des bootcamps de niveau: {}", level);
-
-        List<BootcampResponseDTO> bootcamps = bootcampService.getBootcampsByLevel(level);
-        return ResponseEntity.ok(bootcamps);
+        return ResponseEntity.ok(bootcampService.getBootcampsByLevel(level));
     }
 
     @GetMapping("/sector/{sector}")
-    @Operation(summary = "Récupérer les bootcamps par secteur")
-    public ResponseEntity<List<BootcampResponseDTO>> getBootcampsByTargetSector(@PathVariable String sector) {
+    @Operation(summary = "Récupérer les bootcamps par secteur (BANKING, TELECOM, INSURANCE, RETAIL, INDUSTRY, OTHER)")
+    public ResponseEntity<List<BootcampResponseDTO>> getBootcampsByTargetSector(@PathVariable TargetSector sector) {
         log.debug("Requête de récupération des bootcamps du secteur: {}", sector);
-
-        List<BootcampResponseDTO> bootcamps = bootcampService.getBootcampsByTargetSector(sector);
-        return ResponseEntity.ok(bootcamps);
+        return ResponseEntity.ok(bootcampService.getBootcampsByTargetSector(sector));
     }
 
     @GetMapping("/status/{status}")
-    @Operation(summary = "Récupérer les bootcamps par statut")
-    public ResponseEntity<List<BootcampResponseDTO>> getBootcampsByStatus(@PathVariable String status) {
+    @Operation(summary = "Récupérer les bootcamps par statut (ACTIVE, PLANNED, ARCHIVED)")
+    public ResponseEntity<List<BootcampResponseDTO>> getBootcampsByStatus(@PathVariable BootcampStatus status) {
         log.debug("Requête de récupération des bootcamps avec statut: {}", status);
-
-        List<BootcampResponseDTO> bootcamps = bootcampService.getBootcampsByStatus(status);
-        return ResponseEntity.ok(bootcamps);
+        return ResponseEntity.ok(bootcampService.getBootcampsByStatus(status));
     }
 
     @PutMapping("/{id}")

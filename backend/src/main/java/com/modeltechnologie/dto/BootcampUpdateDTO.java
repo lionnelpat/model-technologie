@@ -1,5 +1,6 @@
 package com.modeltechnologie.dto;
 
+import com.modeltechnologie.entity.BootcampStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,5 +42,7 @@ public class BootcampUpdateDTO {
 
     private List<@NotBlank String> benefits;
 
-    private String status;
+    // Spring MVC désérialise automatiquement "ARCHIVED" -> BootcampStatus.ARCHIVED
+    // Une valeur invalide lève une MethodArgumentNotValidException (400)
+    private BootcampStatus status;
 }

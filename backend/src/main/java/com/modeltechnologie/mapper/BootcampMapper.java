@@ -5,6 +5,8 @@ import com.modeltechnologie.dto.BootcampResponseDTO;
 import com.modeltechnologie.dto.BootcampUpdateDTO;
 import com.modeltechnologie.entity.Bootcamp;
 import com.modeltechnologie.entity.BootcampBenefit;
+import com.modeltechnologie.entity.BootcampLevel;
+import com.modeltechnologie.entity.BootcampStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -16,9 +18,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BootcampMapper {
 
-    private static final String FCFA = "FCFA";
-    private static final String DEFAULT_LEVEL = "Foundation";
     private static final String DEFAULT_CURRENCY = "FCFA";
+    private static final BootcampLevel DEFAULT_LEVEL = BootcampLevel.FOUNDATION;
 
     public BootcampResponseDTO toResponseDTO(Bootcamp bootcamp) {
         if (bootcamp == null) {
@@ -55,7 +56,7 @@ public class BootcampMapper {
                 .currency(DEFAULT_CURRENCY)
                 .level(dto.getLevel() != null ? dto.getLevel() : DEFAULT_LEVEL)
                 .featured(dto.getFeatured())
-                .status("ACTIVE")
+                .status(BootcampStatus.ACTIVE)
                 .maxStudents(15) // Valeur par défaut
                 .build();
 

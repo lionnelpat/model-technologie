@@ -4,6 +4,9 @@ import com.modeltechnologie.dto.BootcampCreateDTO;
 import com.modeltechnologie.dto.BootcampResponseDTO;
 import com.modeltechnologie.dto.BootcampUpdateDTO;
 import com.modeltechnologie.entity.Bootcamp;
+import com.modeltechnologie.entity.BootcampLevel;
+import com.modeltechnologie.entity.BootcampStatus;
+import com.modeltechnologie.entity.TargetSector;
 import com.modeltechnologie.exception.BootcampNotFoundException;
 import com.modeltechnologie.exception.DuplicateBootcampException;
 import com.modeltechnologie.mapper.BootcampMapper;
@@ -96,7 +99,7 @@ public class BootcampServiceImpl implements BootcampService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BootcampResponseDTO> getBootcampsByLevel(String level) {
+    public List<BootcampResponseDTO> getBootcampsByLevel(BootcampLevel level) {
         log.debug("Récupération des bootcamps de niveau: {}", level);
 
         return bootcampRepository.findByLevel(level)
@@ -107,7 +110,7 @@ public class BootcampServiceImpl implements BootcampService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BootcampResponseDTO> getBootcampsByTargetSector(String sector) {
+    public List<BootcampResponseDTO> getBootcampsByTargetSector(TargetSector sector) {
         log.debug("Récupération des bootcamps du secteur: {}", sector);
 
         return bootcampRepository.findByTargetSector(sector)
@@ -118,7 +121,7 @@ public class BootcampServiceImpl implements BootcampService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BootcampResponseDTO> getBootcampsByStatus(String status) {
+    public List<BootcampResponseDTO> getBootcampsByStatus(BootcampStatus status) {
         log.debug("Récupération des bootcamps avec statut: {}", status);
 
         return bootcampRepository.findByStatus(status)
