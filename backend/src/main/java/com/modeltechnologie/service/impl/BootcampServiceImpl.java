@@ -153,12 +153,13 @@ public class BootcampServiceImpl implements BootcampService {
     public void deleteBootcamp(Long id) {
         log.info("Suppression du bootcamp avec l'ID: {}", id);
 
-        if (!bootcampRepository.existsById(id)) {
-            log.warn("Tentative de suppression d'un bootcamp inexistant, ID: {}", id);
-            throw new BootcampNotFoundException("Bootcamp avec l'ID " + id + " non trouvé");
-        }
+        Bootcamp bootcamp = bootcampRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Tentative de suppression d'un bootcamp inexistant, ID: {}", id);
+                    return new BootcampNotFoundException("Bootcamp avec l'ID " + id + " non trouvé");
+                });
 
-        bootcampRepository.deleteById(id);
+        bootcampRepository.delete(bootcamp);
         log.info("Bootcamp supprimé avec succès, ID: {}", id);
     }
 }
