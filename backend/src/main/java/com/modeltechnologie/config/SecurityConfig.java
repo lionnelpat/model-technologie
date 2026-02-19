@@ -34,31 +34,30 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF for stateless API (Spring Security 6.1+ syntax)
                 .csrf(csrf -> csrf.disable())
-
-                // CORS configuration
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // Session management (stateless)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Authorization rules
                 .authorizeHttpRequests(authz -> authz
-                        // Public endpoints
+                        // Public endpoints AVANT context-path (Spring Security voit sans /api)
                         .requestMatchers(
-                                "/health",
-                                "/actuator/**",
-                                "/info",
-                                "/auth/**",
-                                "/api/swagger-ui/**",
-                                "/api/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v1/health",
+                                "/v1/actuator/**",
+                                "/v1/info",
+                                "/v1/auth/**"
                         ).permitAll()
 
-                        // READ-ONLY endpoints (GET) - Public API for frontend
+                        // Swagger/OpenAPI docs
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/swagger-resources",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+
+                        // READ-ONLY endpoints
                         .requestMatchers("GET", "/v1/bootcamps").permitAll()
                         .requestMatchers("GET", "/v1/bootcamps/**").permitAll()
                         .requestMatchers("GET", "/v1/alumni").permitAll()
@@ -68,14 +67,12 @@ public class SecurityConfig {
                         .requestMatchers("GET", "/v1/project-gallery").permitAll()
                         .requestMatchers("GET", "/v1/project-gallery/**").permitAll()
 
-                        // ADMIN endpoints (POST/PUT/DELETE) - Require authentication
+                        // Admin endpoints
                         .requestMatchers("/v1/admin/**").authenticated()
 
-                        // All other endpoints require authentication
+                        // Tous les autres endpoints
                         .anyRequest().authenticated()
                 )
-
-                // Basic auth for testing (optional)
                 .httpBasic(basic -> {});
 
         return http.build();

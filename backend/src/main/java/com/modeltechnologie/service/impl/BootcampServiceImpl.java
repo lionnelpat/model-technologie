@@ -1,6 +1,12 @@
 package com.modeltechnologie.service.impl;
 
+import com.modeltechnologie.dto.BootcampCreateDTO;
+import com.modeltechnologie.dto.BootcampResponseDTO;
+import com.modeltechnologie.dto.BootcampUpdateDTO;
 import com.modeltechnologie.entity.Bootcamp;
+import com.modeltechnologie.exception.BootcampNotFoundException;
+import com.modeltechnologie.exception.DuplicateBootcampException;
+import com.modeltechnologie.mapper.BootcampMapper;
 import com.modeltechnologie.repository.BootcampRepository;
 import com.modeltechnologie.service.BootcampService;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,71 +23,142 @@ import java.util.Optional;
 public class BootcampServiceImpl implements BootcampService {
 
     private final BootcampRepository bootcampRepository;
+    private final BootcampMapper bootcampMapper;
 
+    @Override
     @Transactional
-    public Bootcamp createBootcamp(Bootcamp bootcamp) {
-        log.info("Creating bootcamp: {}", bootcamp.getName());
-        return bootcampRepository.save(bootcamp);
-    }
+    public BootcampResponseDTO createBootcamp(BootcampCreateDTO createDTO) {
+        log.info("Création d'un nouveau bootcamp: {}", createDTO.getTitle());
 
-    @Transactional(readOnly = true)
-    public Optional<Bootcamp> getBootcampById(Long id) {
-        return bootcampRepository.findById(id);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<Bootcamp> getBootcampByName(String name) {
-        return bootcampRepository.findByName(name);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Bootcamp> getAllActiveBootcamps() {
-        return bootcampRepository.findAllActive();
-    }
-
-    @Transactional(readOnly = true)
-    public List<Bootcamp> getBootcampsByLevel(String level) {
-        return bootcampRepository.findByLevelAndIsActiveTrue(level);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Bootcamp> getBootcampsByTargetSector(String sector) {
-        return bootcampRepository.findByTargetSectorAndIsActiveTrue(sector);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Bootcamp> getBootcampsByStatus(String status) {
-        return bootcampRepository.findByStatusAndIsActiveTrue(status);
-    }
-
-    @Transactional
-    public Bootcamp updateBootcamp(Long id, Bootcamp updatedBootcamp) {
-        log.info("Updating bootcamp: {}", id);
-        Optional<Bootcamp> existingBootcamp = bootcampRepository.findById(id);
-
-        if (existingBootcamp.isPresent()) {
-            Bootcamp bootcamp = existingBootcamp.get();
-            bootcamp.setDescription(updatedBootcamp.getDescription());
-            bootcamp.setLevel(updatedBootcamp.getLevel());
-            bootcamp.setDurationWeeks(updatedBootcamp.getDurationWeeks());
-            bootcamp.setMaxStudents(updatedBootcamp.getMaxStudents());
-            bootcamp.setPriceEuros(updatedBootcamp.getPriceEuros());
-            bootcamp.setTargetSector(updatedBootcamp.getTargetSector());
-            bootcamp.setStatus(updatedBootcamp.getStatus());
-
-            return bootcampRepository.save(bootcamp);
+        // ✅ Vérifier les doublons
+        if (bootcampRepository.existsByNameIgnoreCase(createDTO.getTitle())) {
+            log.warn("Tentative de création d'un bootcamp en doublon: {}", createDTO.getTitle());
+            throw new DuplicateBootcampException("Un bootcamp avec le nom '" + createDTO.getTitle() + "' existe déjà");
         }
 
-        throw new IllegalArgumentException("Bootcamp not found with id: " + id);
+        // ✅ Mapper et sauvegarder
+        Bootcamp bootcamp = bootcampMapper.toEntity(createDTO);
+        Bootcamp saved = bootcampRepository.save(bootcamp);
+
+        log.info("Bootcamp créé avec succès, ID: {}", saved.getId());
+        return bootcampMapper.toResponseDTO(saved);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public BootcampResponseDTO getBootcampById(Long id) {
+        log.debug("Récupération du bootcamp avec l'ID: {}", id);
+
+        Bootcamp bootcamp = bootcampRepository.findByIdWithBenefits(id)
+                .orElseThrow(() -> {
+                    log.warn("Bootcamp non trouvé, ID: {}", id);
+                    return new BootcampNotFoundException("Bootcamp avec l'ID " + id + " non trouvé");
+                });
+
+        return bootcampMapper.toResponseDTO(bootcamp);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BootcampResponseDTO> getAllActiveBootcamps() {
+        log.debug("Récupération de tous les bootcamps actifs");
+
+        return bootcampRepository.findAllActive()
+                .stream()
+                .map(bootcampMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BootcampResponseDTO getBootcampByName(String name) {
+        log.debug("Récupération du bootcamp par nom: {}", name);
+
+        Bootcamp bootcamp = bootcampRepository.findByName(name)
+                .orElseThrow(() -> {
+                    log.warn("Bootcamp non trouvé, nom: {}", name);
+                    return new BootcampNotFoundException("Bootcamp '" + name + "' non trouvé");
+                });
+
+        return bootcampMapper.toResponseDTO(bootcamp);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BootcampResponseDTO> getFeaturedBootcamps() {
+        log.debug("Récupération des bootcamps en vedette");
+
+        return bootcampRepository.findFeaturedBootcamps()
+                .stream()
+                .map(bootcampMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BootcampResponseDTO> getBootcampsByLevel(String level) {
+        log.debug("Récupération des bootcamps de niveau: {}", level);
+
+        return bootcampRepository.findByLevel(level)
+                .stream()
+                .map(bootcampMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BootcampResponseDTO> getBootcampsByTargetSector(String sector) {
+        log.debug("Récupération des bootcamps du secteur: {}", sector);
+
+        return bootcampRepository.findByTargetSector(sector)
+                .stream()
+                .map(bootcampMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BootcampResponseDTO> getBootcampsByStatus(String status) {
+        log.debug("Récupération des bootcamps avec statut: {}", status);
+
+        return bootcampRepository.findByStatus(status)
+                .stream()
+                .map(bootcampMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public BootcampResponseDTO updateBootcamp(Long id, BootcampUpdateDTO updateDTO) {
+        log.info("Mise à jour du bootcamp avec l'ID: {}", id);
+
+        Bootcamp bootcamp = bootcampRepository.findById(id)
+                .orElseThrow(() -> new BootcampNotFoundException("Bootcamp avec l'ID " + id + " non trouvé"));
+
+        // ✅ Vérifier les doublons lors de la mise à jour du nom
+        if (!bootcamp.getName().equals(updateDTO.getTitle()) &&
+                bootcampRepository.existsByNameIgnoreCase(updateDTO.getTitle())) {
+            throw new DuplicateBootcampException("Un bootcamp avec le nom '" + updateDTO.getTitle() + "' existe déjà");
+        }
+
+        bootcampMapper.updateEntity(bootcamp, updateDTO);
+        Bootcamp updated = bootcampRepository.save(bootcamp);
+
+        log.info("Bootcamp mis à jour avec succès, ID: {}", updated.getId());
+        return bootcampMapper.toResponseDTO(updated);
+    }
+
+    @Override
     @Transactional
     public void deleteBootcamp(Long id) {
-        log.info("Deleting bootcamp: {}", id);
-        Optional<Bootcamp> bootcamp = bootcampRepository.findById(id);
-        if (bootcamp.isPresent()) {
-            bootcamp.get().setIsActive(false);
-            bootcampRepository.save(bootcamp.get());
+        log.info("Suppression du bootcamp avec l'ID: {}", id);
+
+        if (!bootcampRepository.existsById(id)) {
+            log.warn("Tentative de suppression d'un bootcamp inexistant, ID: {}", id);
+            throw new BootcampNotFoundException("Bootcamp avec l'ID " + id + " non trouvé");
         }
+
+        bootcampRepository.deleteById(id);
+        log.info("Bootcamp supprimé avec succès, ID: {}", id);
     }
 }

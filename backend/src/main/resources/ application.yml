@@ -5,7 +5,7 @@ spring:
   # JPA / Hibernate
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
@@ -67,13 +67,22 @@ management:
       enabled: true
 
 # Springdoc OpenAPI (Swagger)
+# SpringDoc OpenAPI / Swagger
 springdoc:
-  swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
-    operations-sorter: method
   api-docs:
     path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    doc-expansion: list
+    syntax-highlight: highlight-darcula
+    deep-linking: true
+    show-logo: true
+    urls:
+      - name: API Docs
+        url: /api/v3/api-docs
 
 # Application Properties
 app:
