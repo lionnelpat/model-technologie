@@ -3,9 +3,9 @@
  * Classe de base pour les erreurs API
  */
 
-import { ApiErrorType, IApiError } from '@/types/error.types.ts';
+import { ApiErrorType } from '@/types/error.types';
 
-export class ApiError extends Error implements IApiError {
+export class ApiError extends Error implements ApiError {
     public readonly type: ApiErrorType;
     public readonly statusCode?: number;
     public readonly originalError?: Error;
