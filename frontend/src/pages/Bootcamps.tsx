@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export function BootcampPage(): JSX.Element {
-  const { data: bootcamps, isLoading, error, refetch } = useBootcamps();
+  const { data: bootcamps = [], isLoading, error, refetch } = useBootcamps();
 
   // Trier les bootcamps en vedette en premier
   const sortedBootcamps = useMemo((): Bootcamp[] => {
@@ -50,10 +50,10 @@ export function BootcampPage(): JSX.Element {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <a href="#" download>
+                  <Link to="/contact">
                     <Download className="h-4 w-4" />
-                    Télécharger le catalogue
-                  </a>
+                    Demander le catalogue
+                  </Link>
                 </Button>
               </div>
             </div>

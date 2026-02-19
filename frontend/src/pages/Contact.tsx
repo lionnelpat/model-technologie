@@ -214,7 +214,7 @@ const Contact = () => {
                           href="mailto:business.modeltech@gmail.com"
                           className="text-muted-foreground text-sm hover:text-primary transition-colors"
                         >
-                          contact@modeltechnologie.com
+                          business.modeltech@gmail.com
                         </a>
                       </div>
                     </div>
@@ -252,7 +252,7 @@ const Contact = () => {
                       <Linkedin className="h-5 w-5" />
                     </a>
                     <a
-                      href="https://instagram.com"
+                      href="https://www.instagram.com/model.technologie"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"

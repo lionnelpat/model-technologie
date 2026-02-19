@@ -7,11 +7,11 @@ const navigation = {
     { name: "Accueil", href: "/" },
     { name: "À propos", href: "/a-propos" },
     { name: "Services", href: "/services" },
-    { name: "Bootcamps", href: "/bootcamp" },
+    { name: "Bootcamps", href: "/bootcamps" },
   ],
   services: [
     { name: "Formation Power BI", href: "/services" },
-    { name: "Bootcamps Data", href: "/bootcamp" },
+    { name: "Bootcamps Data", href: "/bootcamps" },
     { name: "Formation Intra-entreprise", href: "/services" },
     { name: "Certification Microsoft", href: "/services" },
   ],
