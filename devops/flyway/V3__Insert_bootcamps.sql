@@ -1,0 +1,199 @@
+-- 1. Insérer les bootcamps
+INSERT INTO bootcamps (
+    id,
+    name,
+    description,
+    audience,
+    prerequisites,
+    level,
+    duration_weeks,
+    duration_days,
+    duration_hours,
+    price_euros,
+    price_fcfa,
+    currency,
+    target_sector,
+    featured,
+    status,
+    is_active,
+    created_at,
+    updated_at
+) VALUES
+      (
+          '1',
+          'Power BI pour la Finance',
+          'Maîtrisez Power BI avec des cas pratiques orientés finance : analyse de la rentabilité, suivi budgétaire, reporting financier automatisé.',
+          'Contrôleurs de gestion, DAF, analystes financiers',
+          'Maîtrise d''Excel, notions de comptabilité',
+          'Professional',
+          1,
+          5,
+          35,
+          686.00,
+          '450 000 FCFA',
+          'EUR',
+          'Banking',
+          true,
+          'ACTIVE',
+            true,
+          NOW(),
+          NOW()
+      ),
+      (
+          '2',
+          'Data Analytics pour Managers',
+          'Développez une culture data-driven. Apprenez à interpréter les données et prendre des décisions éclairées basées sur les faits.',
+          'Managers, directeurs, chefs de projet',
+          'Aucun prérequis technique',
+          'Foundation',
+          1,
+          3,
+          21,
+          534.00,
+          '350 000 FCFA',
+          'EUR',
+          'Banking',
+          false,
+          'ACTIVE',
+            true,
+          NOW(),
+          NOW()
+      ),
+      (
+          '3',
+          'Reporting & Data Visualization',
+          'Créez des visualisations impactantes et des rapports automatisés qui communiquent efficacement vos insights.',
+          'Analystes, chargés de reporting, data analysts',
+          'Bases Excel, esprit analytique',
+          'Practitioner',
+          1,
+          4,
+          28,
+          610.00,
+          '400 000 FCFA',
+          'EUR',
+          'Banking',
+          false,
+          'ACTIVE',
+            true,
+          NOW(),
+          NOW()
+      ),
+      (
+          '4',
+          'Préparation Certification PL-300',
+          'Préparez-vous intensivement à l''examen Microsoft PL-300 Power BI Data Analyst avec un taux de réussite supérieur à 90%.',
+          'Utilisateurs Power BI confirmés',
+          'Expérience Power BI (6 mois minimum)',
+          'Professional',
+          1,
+          3,
+          21,
+          458.00,
+          '300 000 FCFA',
+          'EUR',
+          'Telecom',
+          false,
+          'ACTIVE',
+            true,
+          NOW(),
+          NOW()
+      );
+
+-- 2. Insérer les bénéfices pour chaque bootcamp
+INSERT INTO bootcamp_benefits (bootcamp_id, benefit_text, display_order, is_active, created_at, updated_at) VALUES
+
+-- Power BI pour la Finance
+( 1, 'Tableaux de bord financiers interactifs', 1, true, NOW(), NOW()),
+( 1, 'Automatisation des reportings mensuels', 2, true, NOW(), NOW()),
+( 1, 'Analyse de variance et KPIs', 3, true, NOW(), NOW()),
+( 1, 'Connexion aux sources comptables', 4, true, NOW(), NOW()),
+( 1, 'Certification de fin de formation', 5, true, NOW(), NOW()),
+
+-- Data Analytics pour Managers
+( 2, 'Lecture et interprétation des données', 1, true, NOW(), NOW()),
+( 2, 'Identification des KPIs pertinents', 2, true, NOW(), NOW()),
+( 2, 'Prise de décision basée sur les données', 3, true, NOW(), NOW()),
+( 2, 'Communication avec les équipes data', 4, true, NOW(), NOW()),
+( 2, 'Initiation à Power BI', 5, true, NOW(), NOW()),
+
+-- Reporting & Data Visualization
+( 3, 'Principes de data visualization', 1, true, NOW(), NOW()),
+( 3, 'Power BI Desktop complet', 2, true, NOW(), NOW()),
+( 3, 'Conception de dashboards efficaces', 3,  true, NOW(), NOW()),
+( 3, 'Storytelling avec les données', 4, true, NOW(), NOW()),
+( 3, 'Publication et partage', 5, true, NOW(), NOW()),
+
+-- Préparation Certification PL-300
+(4, 'Révision complète du syllabus', 1, true, NOW(), NOW()),
+(4, 'Exercices pratiques ciblés', 2, true, NOW(), NOW()),
+(4, '3 examens blancs commentés', 3, true, NOW(), NOW()),
+(4, 'Stratégies de passage d''examen',4,  true, NOW(), NOW()),
+(4, 'Support jusqu''à l''examen', 5, true, NOW(), NOW());
+
+-- 3. Insérer les sessions (optionnel - pour "nextSession" du frontend)
+INSERT INTO bootcamp_sessions (
+    id,
+    bootcamp_id,
+    session_name,
+    start_date,
+    end_date,
+    country,
+    location,
+    language,
+    status,
+    created_at,
+    updated_at
+) VALUES
+      (
+          '660e8400-e29b-41d4-a716-446655440001',
+          '550e8400-e29b-41d4-a716-446655440001',
+          'Février 2026 - Dakar',
+          '2026-02-03',
+          '2026-02-07',
+          'Senegal',
+          'Dakar',
+          'FR',
+          'SCHEDULED',
+          NOW(),
+          NOW()
+      ),
+      (
+          '660e8400-e29b-41d4-a716-446655440002',
+          '550e8400-e29b-41d4-a716-446655440002',
+          'Mars 2026 - Dakar',
+          '2026-03-03',
+          '2026-03-05',
+          'Senegal',
+          'Dakar',
+          'FR',
+          'SCHEDULED',
+          NOW(),
+          NOW()
+      ),
+      (
+          '660e8400-e29b-41d4-a716-446655440003',
+          '550e8400-e29b-41d4-a716-446655440003',
+          'Avril 2026 - Dakar',
+          '2026-04-06',
+          '2026-04-09',
+          'Senegal',
+          'Dakar',
+          'FR',
+          'SCHEDULED',
+          NOW(),
+          NOW()
+      ),
+      (
+          '660e8400-e29b-41d4-a716-446655440004',
+          '550e8400-e29b-41d4-a716-446655440004',
+          'Mars 2026 - Dakar',
+          '2026-03-10',
+          '2026-03-12',
+          'Senegal',
+          'Dakar',
+          'FR',
+          'SCHEDULED',
+          NOW(),
+          NOW()
+      );

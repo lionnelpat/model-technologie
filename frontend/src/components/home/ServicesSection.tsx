@@ -13,7 +13,7 @@ const services = [
     icon: GraduationCap,
     title: "Bootcamps Data",
     description: "Programmes intensifs pour acquérir rapidement les compétences clés en analyse de données.",
-    href: "/bootcamps",
+    href: "/bootcamp",
   },
   {
     icon: Building,
