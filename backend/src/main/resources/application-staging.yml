@@ -49,7 +49,7 @@ app:
     # ✅ En production: UNIQUEMENT les domaines officiels
     # À CONFIGURER via variables d'environnement!
     allowedOrigins:
-      - "${CORS_ALLOWED_ORIGINS:https://staging.model-technologie.com:3001}"
+      - "${CORS_ALLOWED_ORIGINS:http://staging.model-technologie.com:3001}"
 
     # ✅ Seulement les méthodes nécessaires
     allowedMethods:
