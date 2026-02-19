@@ -1,8 +1,10 @@
 package com.modeltechnologie.controller;
 
+import com.modeltechnologie.dto.LoginRequestDTO;
 import com.modeltechnologie.security.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,62 +30,38 @@ public class AuthController {
     }
 
     /**
-     * Login endpoint - authenticate user and return JWT token
+     * Login endpoint - authenticate user and return JWT token.
+     * Credentials are sent in the request body (never in URL params).
      */
     @PostMapping("/login")
     @Operation(summary = "Login", description = "Authenticate and get JWT token")
-    public Map<String, Object> login(
-            @RequestParam String username,
-            @RequestParam String password) {
+    public Map<String, Object> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
 
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // Authenticate
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password)
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
+                    )
             );
 
-            // Generate token
             String token = jwtTokenProvider.generateTokenFromAuthentication(authentication);
 
             response.put("success", true);
             response.put("token", token);
-            response.put("username", username);
+            response.put("username", loginRequest.getUsername());
             response.put("message", "Login successful");
 
-            log.info("User {} logged in successfully", username);
+            log.info("User {} logged in successfully", loginRequest.getUsername());
 
         } catch (AuthenticationException e) {
             response.put("success", false);
             response.put("message", "Invalid username or password");
-            response.put("error", e.getMessage());
 
-            log.warn("Failed login attempt for user: {}", username);
+            log.warn("Failed login attempt for user: {}", loginRequest.getUsername());
         }
-
-        return response;
-    }
-
-    /**
-     * Dev login - for testing without proper user management
-     * Returns a test token
-     */
-    @PostMapping("/dev-login")
-    @Operation(summary = "Dev Login", description = "Login for development (no credentials required)")
-    public Map<String, Object> devLogin() {
-        Map<String, Object> response = new HashMap<>();
-
-        // Generate test token
-        String token = jwtTokenProvider.generateToken("dev-user");
-
-        response.put("success", true);
-        response.put("token", token);
-        response.put("username", "dev-user");
-        response.put("message", "Dev login successful - use this token for API calls");
-        response.put("usage", "Add 'Authorization: Bearer " + token + "' to your API requests");
-
-        log.info("Dev login token generated");
 
         return response;
     }
