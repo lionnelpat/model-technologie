@@ -5,7 +5,7 @@ spring:
   # JPA / Hibernate
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
@@ -13,11 +13,12 @@ spring:
     show-sql: false
     open-in-view: false
 
-  # Datasource (sera overridé par profils)
+  # Datasource — toutes les valeurs DOIVENT être surchargées par le profil actif.
+  # Ne jamais stocker de credentials réels dans ce fichier.
   datasource:
-    url: jdbc:postgresql://localhost:5432/model_tech_db
-    username: postgres
-    password: changeme
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/model_tech_db}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5

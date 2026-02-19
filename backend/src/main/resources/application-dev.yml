@@ -46,7 +46,10 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
 jwt:
-  secret: dev_secret_key_not_secure_change_in_production
+  # Clé de dev encodée en Base64 (64 octets = 512 bits pour HS512).
+  # NE PAS utiliser en staging/prod.
+  # Pour générer une clé de production : openssl rand -base64 64
+  secret: dGhpcyppc3BhZGV2c2VjcmV0a2V5Zm9ybW9kZWx0ZWNobm9sb2dpZWJhY2tlbmQyMDI1bm90Zm9ycHJvZHVjdGlvbg==
   expiration: 86400000
 
 management:
