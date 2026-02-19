@@ -74,7 +74,7 @@ public class BootcampServiceImpl implements BootcampService {
     public BootcampResponseDTO getBootcampByName(String name) {
         log.debug("Récupération du bootcamp par nom: {}", name);
 
-        Bootcamp bootcamp = bootcampRepository.findByName(name)
+        Bootcamp bootcamp = bootcampRepository.findByNameWithBenefits(name)
                 .orElseThrow(() -> {
                     log.warn("Bootcamp non trouvé, nom: {}", name);
                     return new BootcampNotFoundException("Bootcamp '" + name + "' non trouvé");
@@ -132,11 +132,14 @@ public class BootcampServiceImpl implements BootcampService {
     public BootcampResponseDTO updateBootcamp(Long id, BootcampUpdateDTO updateDTO) {
         log.info("Mise à jour du bootcamp avec l'ID: {}", id);
 
-        Bootcamp bootcamp = bootcampRepository.findById(id)
+        // Utiliser findByIdWithBenefits pour charger les benefits en LAZY
+        // car updateBenefits() appelle bootcamp.getBenefits().clear()
+        Bootcamp bootcamp = bootcampRepository.findByIdWithBenefits(id)
                 .orElseThrow(() -> new BootcampNotFoundException("Bootcamp avec l'ID " + id + " non trouvé"));
 
-        // ✅ Vérifier les doublons lors de la mise à jour du nom
-        if (!bootcamp.getName().equals(updateDTO.getTitle()) &&
+        // Vérifier les doublons lors de la mise à jour du nom
+        if (updateDTO.getTitle() != null &&
+                !bootcamp.getName().equals(updateDTO.getTitle()) &&
                 bootcampRepository.existsByNameIgnoreCase(updateDTO.getTitle())) {
             throw new DuplicateBootcampException("Un bootcamp avec le nom '" + updateDTO.getTitle() + "' existe déjà");
         }

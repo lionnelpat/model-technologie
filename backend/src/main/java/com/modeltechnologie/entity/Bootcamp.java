@@ -64,8 +64,9 @@ public class Bootcamp extends BaseEntity {
     @Column(name = "status", nullable = false)
     private String status = "ACTIVE";
 
-    // ✅ Relation avec les bénéfices
-    @OneToMany(mappedBy = "bootcamp", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    // Relation avec les bénéfices — LAZY pour éviter le chargement systématique.
+    // Les requêtes qui nécessitent les benefits utilisent LEFT JOIN FETCH explicitement.
+    @OneToMany(mappedBy = "bootcamp", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BootcampBenefit> benefits = new ArrayList<>();
 
     // ✅ Relation avec les sessions
