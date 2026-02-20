@@ -9,6 +9,10 @@ public enum TargetSector {
     BANKING,
     TELECOM,
     INSURANCE,
+    MANAGEMENT,
+    FINANCE,
+    CERTIFICATION,
+    ANALYTICS,
     RETAIL,
     INDUSTRY,
     OTHER
