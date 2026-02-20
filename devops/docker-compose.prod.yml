@@ -11,8 +11,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS:-}
-    ports:
-      - "5432:5432"
+    # Pas de 'ports' : PostgreSQL n'est accessible que depuis le réseau Docker interne.
+    # Le backend communique via le hostname 'postgres' sur le réseau model-tech-network.
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
@@ -49,8 +49,7 @@ services:
       JAVA_OPTS: "-Xmx1g -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ParallelRefProcEnabled"
       LOG_LEVEL: WARN
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-    ports:
-      - "8080:8080"
+    # Pas de 'ports' : le backend est accessible uniquement via Nginx sur le réseau interne.
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,8 +78,7 @@ services:
     container_name: model-tech-frontend-prod
     environment:
       VITE_API_URL: https://${DOMAIN_PROD}/api
-    ports:
-      - "3000:3000"
+    # Pas de 'ports' : le frontend est servi via Nginx sur le réseau interne.
     depends_on:
       - backend
     networks:

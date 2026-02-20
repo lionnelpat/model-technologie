@@ -1,244 +1,79 @@
 // src/hooks/queries/useBootcamps.ts
 /**
- * Hook personnalisé pour récupérer les bootcamps
- * Gère les états de chargement, erreur et données
+ * Hooks de requête pour les bootcamps — basés sur TanStack Query
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { bootcampService } from '@/services/bootcamp/BootcampService';
-import { Bootcamp, BootcampLevel, TargetSector } from '@/types/bootcamp.types';
-import { ApiError } from '@/services/errors/ApiError';
+import { BootcampLevel, TargetSector } from '@/types/bootcamp.types';
 
 // ============================================================================
-// Types du hook
+// Clés de cache centralisées
 // ============================================================================
 
-interface UseBootcampsState {
-    data: Bootcamp[];
-    isLoading: boolean;
-    error: ApiError | null;
-    isSuccess: boolean;
-}
-
-interface UseBootcampsReturn extends UseBootcampsState {
-    refetch: () => Promise<void>;
-}
-
-interface UseBootcampByIdReturn {
-    data: Bootcamp | null;
-    isLoading: boolean;
-    error: ApiError | null;
-    isSuccess: boolean;
-    refetch: () => Promise<void>;
-}
+export const bootcampKeys = {
+    all: ['bootcamps'] as const,
+    active: () => [...bootcampKeys.all, 'active'] as const,
+    featured: () => [...bootcampKeys.all, 'featured'] as const,
+    byId: (id: number) => [...bootcampKeys.all, 'id', id] as const,
+    byLevel: (level: BootcampLevel) => [...bootcampKeys.all, 'level', level] as const,
+    bySector: (sector: TargetSector) => [...bootcampKeys.all, 'sector', sector] as const,
+};
 
 // ============================================================================
-// Hook pour récupérer tous les bootcamps
+// Hook pour récupérer tous les bootcamps actifs
 // ============================================================================
 
-export function useBootcamps(): UseBootcampsReturn {
-    const [state, setState] = useState<UseBootcampsState>({
-        data: [],
-        isLoading: true,
-        error: null,
-        isSuccess: false
+export function useBootcamps() {
+    return useQuery({
+        queryKey: bootcampKeys.active(),
+        queryFn: () => bootcampService.getAllActiveBootcamps(),
     });
-
-    const refetch = useCallback(async () => {
-        setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-        try {
-            const data = await bootcampService.getAllActiveBootcamps();
-            setState({
-                data,
-                isLoading: false,
-                error: null,
-                isSuccess: true
-            });
-        } catch (error) {
-            const apiError = error instanceof ApiError ? error : new Error(String(error));
-            setState({
-                data: [],
-                isLoading: false,
-                error: apiError as ApiError,
-                isSuccess: false
-            });
-        }
-    }, []);
-
-    useEffect(() => {
-        refetch();
-    }, [refetch]);
-
-    return { ...state, refetch };
 }
 
 // ============================================================================
 // Hook pour récupérer un bootcamp par ID
 // ============================================================================
 
-export function useBootcampById(id: number | null): UseBootcampByIdReturn {
-    const [state, setState] = useState<Omit<UseBootcampByIdReturn, 'refetch'>>({
-        data: null,
-        isLoading: true,
-        error: null,
-        isSuccess: false
+export function useBootcampById(id: number | null) {
+    return useQuery({
+        queryKey: bootcampKeys.byId(id!),
+        queryFn: () => bootcampService.getBootcampById(id!),
+        enabled: id !== null && id > 0,
     });
-
-    const refetch = useCallback(async () => {
-        if (id === null) return;
-
-        setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-        try {
-            const data = await bootcampService.getBootcampById(id);
-            setState({
-                data,
-                isLoading: false,
-                error: null,
-                isSuccess: true
-            });
-        } catch (error) {
-            const apiError = error instanceof ApiError ? error : new Error(String(error));
-            setState({
-                data: null,
-                isLoading: false,
-                error: apiError as ApiError,
-                isSuccess: false
-            });
-        }
-    }, [id]);
-
-    useEffect(() => {
-        refetch();
-    }, [refetch]);
-
-    return { ...state, refetch };
 }
 
 // ============================================================================
 // Hook pour récupérer les bootcamps en vedette
 // ============================================================================
 
-export function useFeaturedBootcamps(): UseBootcampsReturn {
-    const [state, setState] = useState<UseBootcampsState>({
-        data: [],
-        isLoading: true,
-        error: null,
-        isSuccess: false
+export function useFeaturedBootcamps() {
+    return useQuery({
+        queryKey: bootcampKeys.featured(),
+        queryFn: () => bootcampService.getFeaturedBootcamps(),
     });
-
-    const refetch = useCallback(async () => {
-        setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-        try {
-            const data = await bootcampService.getFeaturedBootcamps();
-            setState({
-                data,
-                isLoading: false,
-                error: null,
-                isSuccess: true
-            });
-        } catch (error) {
-            const apiError = error instanceof ApiError ? error : new Error(String(error));
-            setState({
-                data: [],
-                isLoading: false,
-                error: apiError as ApiError,
-                isSuccess: false
-            });
-        }
-    }, []);
-
-    useEffect(() => {
-        refetch();
-    }, [refetch]);
-
-    return { ...state, refetch };
 }
 
 // ============================================================================
 // Hook pour récupérer les bootcamps par niveau
 // ============================================================================
 
-export function useBootcampsByLevel(level: BootcampLevel | null): UseBootcampsReturn {
-    const [state, setState] = useState<UseBootcampsState>({
-        data: [],
-        isLoading: true,
-        error: null,
-        isSuccess: false
+export function useBootcampsByLevel(level: BootcampLevel | null) {
+    return useQuery({
+        queryKey: bootcampKeys.byLevel(level!),
+        queryFn: () => bootcampService.getBootcampsByLevel(level!),
+        enabled: level !== null,
     });
-
-    const refetch = useCallback(async () => {
-        if (level === null) return;
-
-        setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-        try {
-            const data = await bootcampService.getBootcampsByLevel(level);
-            setState({
-                data,
-                isLoading: false,
-                error: null,
-                isSuccess: true
-            });
-        } catch (error) {
-            const apiError = error instanceof ApiError ? error : new Error(String(error));
-            setState({
-                data: [],
-                isLoading: false,
-                error: apiError as ApiError,
-                isSuccess: false
-            });
-        }
-    }, [level]);
-
-    useEffect(() => {
-        refetch();
-    }, [refetch]);
-
-    return { ...state, refetch };
 }
 
 // ============================================================================
 // Hook pour récupérer les bootcamps par secteur
 // ============================================================================
 
-export function useBootcampsByTargetSector(sector: TargetSector | null): UseBootcampsReturn {
-    const [state, setState] = useState<UseBootcampsState>({
-        data: [],
-        isLoading: true,
-        error: null,
-        isSuccess: false
+export function useBootcampsByTargetSector(sector: TargetSector | null) {
+    return useQuery({
+        queryKey: bootcampKeys.bySector(sector!),
+        queryFn: () => bootcampService.getBootcampsByTargetSector(sector!),
+        enabled: sector !== null,
     });
-
-    const refetch = useCallback(async () => {
-        if (sector === null) return;
-
-        setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-        try {
-            const data = await bootcampService.getBootcampsByTargetSector(sector);
-            setState({
-                data,
-                isLoading: false,
-                error: null,
-                isSuccess: true
-            });
-        } catch (error) {
-            const apiError = error instanceof ApiError ? error : new Error(String(error));
-            setState({
-                data: [],
-                isLoading: false,
-                error: apiError as ApiError,
-                isSuccess: false
-            });
-        }
-    }, [sector]);
-
-    useEffect(() => {
-        refetch();
-    }, [refetch]);
-
-    return { ...state, refetch };
 }

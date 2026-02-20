@@ -207,3 +207,5 @@ build/
 .#*
 /docs/setup_deploy_user.sh
 /devops/logs/nginx/error.log
+
+.claude/*

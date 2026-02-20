@@ -61,6 +61,9 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
+                        // Contact form - public POST
+                        .requestMatchers("POST", "/v1/contact").permitAll()
+
                         // READ-ONLY endpoints
                         .requestMatchers("GET", "/v1/bootcamps").permitAll()
                         .requestMatchers("GET", "/v1/bootcamps/**").permitAll()

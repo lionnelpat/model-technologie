@@ -1,5 +1,6 @@
 package com.modeltechnologie.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,9 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BootcampNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleBootcampNotFoundException(BootcampNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleBootcampNotFoundException(
+            BootcampNotFoundException ex,
+            HttpServletRequest request) {
         log.error("Bootcamp non trouvé: {}", ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -25,14 +28,16 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND.value())
                 .error("Bootcamp non trouvé")
                 .message(ex.getMessage())
-                .path("/v1/bootcamps")
+                .path(request.getRequestURI())
                 .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
     @ExceptionHandler(DuplicateBootcampException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateBootcampException(DuplicateBootcampException ex) {
+    public ResponseEntity<ErrorResponse> handleDuplicateBootcampException(
+            DuplicateBootcampException ex,
+            HttpServletRequest request) {
         log.error("Bootcamp en doublon: {}", ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -40,14 +45,16 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT.value())
                 .error("Bootcamp en doublon")
                 .message(ex.getMessage())
-                .path("/v1/bootcamps")
+                .path(request.getRequestURI())
                 .build();
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
@@ -61,14 +68,16 @@ public class GlobalExceptionHandler {
                 .error("Erreur de validation")
                 .message("Les données fournies sont invalides")
                 .validationErrors(errors)
-                .path("/v1/bootcamps")
+                .path(request.getRequestURI())
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleGenericException(
+            Exception ex,
+            HttpServletRequest request) {
         log.error("Erreur inattendue: ", ex);
 
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -76,7 +85,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("Erreur interne du serveur")
                 .message("Une erreur inattendue s'est produite")
-                .path("/v1/bootcamps")
+                .path(request.getRequestURI())
                 .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);

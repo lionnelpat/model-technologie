@@ -26,22 +26,23 @@ public class Bootcamp extends BaseEntity {
     private String description;
 
     @Column(name = "audience", length = 500)
-    private String audience; // ← NOUVEAU
+    private String audience;
 
     @Column(name = "prerequisites", length = 500)
-    private String prerequisites; // ← NOUVEAU
+    private String prerequisites;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "level", nullable = false)
-    private String level; // Foundation, Practitioner, Professional
+    private BootcampLevel level;
 
     @Column(name = "duration_weeks", nullable = false)
     private Integer durationWeeks;
 
     @Column(name = "duration_days", nullable = false)
-    private Integer durationDays; // ← NOUVEAU (pour "5 jours")
+    private Integer durationDays;
 
     @Column(name = "duration_hours", nullable = false)
-    private Integer durationHours; // ← NOUVEAU (pour "35h")
+    private Integer durationHours;
 
     @Column(name = "max_students")
     private Integer maxStudents;
@@ -50,22 +51,25 @@ public class Bootcamp extends BaseEntity {
     private Double priceEuros;
 
     @Column(name = "price_fcfa")
-    private String priceFcfa; // ← NOUVEAU (stocké comme string)
+    private String priceFcfa;
 
     @Column(name = "currency")
     private String currency = "EUR";
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "target_sector")
-    private String targetSector;
+    private TargetSector targetSector;
 
     @Column(name = "featured")
-    private Boolean featured = false; // ← NOUVEAU
+    private Boolean featured = false;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status = "ACTIVE";
+    private BootcampStatus status;
 
-    // ✅ Relation avec les bénéfices
-    @OneToMany(mappedBy = "bootcamp", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    // Relation avec les bénéfices — LAZY pour éviter le chargement systématique.
+    // Les requêtes qui nécessitent les benefits utilisent LEFT JOIN FETCH explicitement.
+    @OneToMany(mappedBy = "bootcamp", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BootcampBenefit> benefits = new ArrayList<>();
 
     // ✅ Relation avec les sessions

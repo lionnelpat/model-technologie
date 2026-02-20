@@ -1,5 +1,6 @@
 package com.modeltechnologie.dto;
 
+import com.modeltechnologie.entity.BootcampLevel;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,5 +50,7 @@ public class BootcampCreateDTO {
     @NotEmpty(message = "Au moins un bénéfice est requis")
     private List<@NotBlank String> benefits;
 
-    private String level;
+    // Spring MVC désérialise automatiquement "FOUNDATION" -> BootcampLevel.FOUNDATION
+    // Une valeur invalide lève une MethodArgumentNotValidException (400)
+    private BootcampLevel level;
 }

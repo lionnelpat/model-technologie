@@ -8,24 +8,34 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
 @Slf4j
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:your_super_secret_jwt_key_change_this_in_production_min_256_bits}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration:86400000}")
+    @Value("${jwt.expiration:3600000}")
     private long jwtExpirationMs;
+
+    /**
+     * Builds the SecretKey from the Base64-encoded secret.
+     * The secret must be a Base64-encoded value of at least 64 bytes (512 bits) for HS512.
+     * Generate with: openssl rand -base64 64
+     */
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = Base64.getDecoder().decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
 
     /**
      * Generate JWT token from authentication
      */
     public String generateTokenFromAuthentication(Authentication authentication) {
-        String username = authentication.getName();
-        return generateToken(username);
+        return generateToken(authentication.getName());
     }
 
     /**
@@ -35,13 +45,11 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(key, SignatureAlgorithm.HS512)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -50,10 +58,8 @@ public class JwtTokenProvider {
      */
     public String getUsernameFromToken(String token) {
         try {
-            SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-
             return Jwts.parser()
-                    .verifyWith(key)
+                    .verifyWith(getSigningKey())
                     .build()
                     .parseSignedClaims(token)
                     .getPayload()
@@ -81,28 +87,22 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String token) {
         try {
-            SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-
             Jwts.parser()
-                    .verifyWith(key)
+                    .verifyWith(getSigningKey())
                     .build()
-                    .parseSignedClaims(token)
-                    .getPayload()
-                    .getSubject();
-
+                    .parseSignedClaims(token);
             return true;
         } catch (ExpiredJwtException e) {
-            log.error("JWT token is expired: {}", e.getMessage());
+            log.warn("JWT token is expired: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
-            log.error("JWT token is unsupported: {}", e.getMessage());
+            log.warn("JWT token is unsupported: {}", e.getMessage());
         } catch (MalformedJwtException e) {
-            log.error("Invalid JWT token: {}", e.getMessage());
+            log.warn("Invalid JWT token: {}", e.getMessage());
         } catch (SignatureException e) {
-            log.error("JWT signature validation failed: {}", e.getMessage());
+            log.warn("JWT signature validation failed: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            log.error("JWT claims string is empty: {}", e.getMessage());
+            log.warn("JWT claims string is empty: {}", e.getMessage());
         }
-
         return false;
     }
 

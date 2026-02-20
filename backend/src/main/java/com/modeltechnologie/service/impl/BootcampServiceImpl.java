@@ -4,6 +4,9 @@ import com.modeltechnologie.dto.BootcampCreateDTO;
 import com.modeltechnologie.dto.BootcampResponseDTO;
 import com.modeltechnologie.dto.BootcampUpdateDTO;
 import com.modeltechnologie.entity.Bootcamp;
+import com.modeltechnologie.entity.BootcampLevel;
+import com.modeltechnologie.entity.BootcampStatus;
+import com.modeltechnologie.entity.TargetSector;
 import com.modeltechnologie.exception.BootcampNotFoundException;
 import com.modeltechnologie.exception.DuplicateBootcampException;
 import com.modeltechnologie.mapper.BootcampMapper;
@@ -74,7 +77,7 @@ public class BootcampServiceImpl implements BootcampService {
     public BootcampResponseDTO getBootcampByName(String name) {
         log.debug("Récupération du bootcamp par nom: {}", name);
 
-        Bootcamp bootcamp = bootcampRepository.findByName(name)
+        Bootcamp bootcamp = bootcampRepository.findByNameWithBenefits(name)
                 .orElseThrow(() -> {
                     log.warn("Bootcamp non trouvé, nom: {}", name);
                     return new BootcampNotFoundException("Bootcamp '" + name + "' non trouvé");
@@ -96,7 +99,7 @@ public class BootcampServiceImpl implements BootcampService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BootcampResponseDTO> getBootcampsByLevel(String level) {
+    public List<BootcampResponseDTO> getBootcampsByLevel(BootcampLevel level) {
         log.debug("Récupération des bootcamps de niveau: {}", level);
 
         return bootcampRepository.findByLevel(level)
@@ -107,7 +110,7 @@ public class BootcampServiceImpl implements BootcampService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BootcampResponseDTO> getBootcampsByTargetSector(String sector) {
+    public List<BootcampResponseDTO> getBootcampsByTargetSector(TargetSector sector) {
         log.debug("Récupération des bootcamps du secteur: {}", sector);
 
         return bootcampRepository.findByTargetSector(sector)
@@ -118,7 +121,7 @@ public class BootcampServiceImpl implements BootcampService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BootcampResponseDTO> getBootcampsByStatus(String status) {
+    public List<BootcampResponseDTO> getBootcampsByStatus(BootcampStatus status) {
         log.debug("Récupération des bootcamps avec statut: {}", status);
 
         return bootcampRepository.findByStatus(status)
@@ -132,11 +135,14 @@ public class BootcampServiceImpl implements BootcampService {
     public BootcampResponseDTO updateBootcamp(Long id, BootcampUpdateDTO updateDTO) {
         log.info("Mise à jour du bootcamp avec l'ID: {}", id);
 
-        Bootcamp bootcamp = bootcampRepository.findById(id)
+        // Utiliser findByIdWithBenefits pour charger les benefits en LAZY
+        // car updateBenefits() appelle bootcamp.getBenefits().clear()
+        Bootcamp bootcamp = bootcampRepository.findByIdWithBenefits(id)
                 .orElseThrow(() -> new BootcampNotFoundException("Bootcamp avec l'ID " + id + " non trouvé"));
 
-        // ✅ Vérifier les doublons lors de la mise à jour du nom
-        if (!bootcamp.getName().equals(updateDTO.getTitle()) &&
+        // Vérifier les doublons lors de la mise à jour du nom
+        if (updateDTO.getTitle() != null &&
+                !bootcamp.getName().equals(updateDTO.getTitle()) &&
                 bootcampRepository.existsByNameIgnoreCase(updateDTO.getTitle())) {
             throw new DuplicateBootcampException("Un bootcamp avec le nom '" + updateDTO.getTitle() + "' existe déjà");
         }
@@ -153,12 +159,13 @@ public class BootcampServiceImpl implements BootcampService {
     public void deleteBootcamp(Long id) {
         log.info("Suppression du bootcamp avec l'ID: {}", id);
 
-        if (!bootcampRepository.existsById(id)) {
-            log.warn("Tentative de suppression d'un bootcamp inexistant, ID: {}", id);
-            throw new BootcampNotFoundException("Bootcamp avec l'ID " + id + " non trouvé");
-        }
+        Bootcamp bootcamp = bootcampRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Tentative de suppression d'un bootcamp inexistant, ID: {}", id);
+                    return new BootcampNotFoundException("Bootcamp avec l'ID " + id + " non trouvé");
+                });
 
-        bootcampRepository.deleteById(id);
+        bootcampRepository.delete(bootcamp);
         log.info("Bootcamp supprimé avec succès, ID: {}", id);
     }
 }
