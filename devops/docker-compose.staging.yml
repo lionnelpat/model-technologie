@@ -32,7 +32,9 @@ services:
 
   # Spring Boot Backend
   backend:
-    image: ${REGISTRY}/lionnelpat/model-technologie-backend:${BACKEND_TAG:-latest}
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
     container_name: model-tech-backend-staging
     environment:
       SPRING_PROFILES_ACTIVE: staging
@@ -65,10 +67,14 @@ services:
 
   # React Frontend
   frontend:
-    image: ${REGISTRY}/lionnelpat/model-technologie-frontend:${FRONTEND_TAG:-latest}
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://${DOMAIN_STAGING}/api
     container_name: model-tech-frontend-staging
     environment:
-      VITE_API_URL: https://${DOMAIN_STAGING}/api
+      NODE_ENV: production
     ports:
       - "3000:3000"
     depends_on:

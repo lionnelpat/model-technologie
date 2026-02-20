@@ -12,6 +12,10 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# VITE_API_URL doit être connue au moment du build (Vite l'embarque dans le bundle)
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build the application
 RUN npm run build
 
