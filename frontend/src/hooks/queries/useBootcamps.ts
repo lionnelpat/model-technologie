@@ -5,7 +5,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { bootcampService } from '@/services/bootcamp/BootcampService';
-import { BootcampLevel, TargetSector } from '@/types/bootcamp.types';
+import { Bootcamp, BootcampLevel, TargetSector } from '@/types/bootcamp.types';
+import { ApiError } from '@/services/errors/ApiError';
 
 // ============================================================================
 // Clés de cache centralisées
@@ -25,7 +26,7 @@ export const bootcampKeys = {
 // ============================================================================
 
 export function useBootcamps() {
-    return useQuery({
+    return useQuery<Bootcamp[], ApiError>({
         queryKey: bootcampKeys.active(),
         queryFn: () => bootcampService.getAllActiveBootcamps(),
     });
@@ -36,7 +37,7 @@ export function useBootcamps() {
 // ============================================================================
 
 export function useBootcampById(id: number | null) {
-    return useQuery({
+    return useQuery<Bootcamp, ApiError>({
         queryKey: bootcampKeys.byId(id!),
         queryFn: () => bootcampService.getBootcampById(id!),
         enabled: id !== null && id > 0,
@@ -48,7 +49,7 @@ export function useBootcampById(id: number | null) {
 // ============================================================================
 
 export function useFeaturedBootcamps() {
-    return useQuery({
+    return useQuery<Bootcamp[], ApiError>({
         queryKey: bootcampKeys.featured(),
         queryFn: () => bootcampService.getFeaturedBootcamps(),
     });
@@ -59,7 +60,7 @@ export function useFeaturedBootcamps() {
 // ============================================================================
 
 export function useBootcampsByLevel(level: BootcampLevel | null) {
-    return useQuery({
+    return useQuery<Bootcamp[], ApiError>({
         queryKey: bootcampKeys.byLevel(level!),
         queryFn: () => bootcampService.getBootcampsByLevel(level!),
         enabled: level !== null,
@@ -71,7 +72,7 @@ export function useBootcampsByLevel(level: BootcampLevel | null) {
 // ============================================================================
 
 export function useBootcampsByTargetSector(sector: TargetSector | null) {
-    return useQuery({
+    return useQuery<Bootcamp[], ApiError>({
         queryKey: bootcampKeys.bySector(sector!),
         queryFn: () => bootcampService.getBootcampsByTargetSector(sector!),
         enabled: sector !== null,
