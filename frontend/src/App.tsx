@@ -6,13 +6,25 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Services from "./pages/Services";
-import Bootcamps from "./pages/Bootcamps";
+import  {BootcampPage} from "./pages/Bootcamps";
 import References from "./pages/References";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
-import Alumni from "@/pages/Alumni.tsx";
+import Alumni from "@/pages/Alumni";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,       // 5 minutes
+      gcTime: 1000 * 60 * 30,          // 30 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 0,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -25,7 +37,7 @@ const App = () => (
           <Route path="/a-propos" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/alumnis" element={ <Alumni />} />
-          <Route path="/bootcamps" element={<Bootcamps />} />
+          <Route path="/bootcamps" element={<BootcampPage />} />
           <Route path="/references" element={<References />} />
           <Route path="/contact" element={<Contact />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

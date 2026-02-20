@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: model-tech-postgres
+    environment:
+      POSTGRES_DB: model_tech_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: s%Po&54VYGMgE5fu
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: model-tech-backend
+    environment:
+      - CORS_ALLOWED_ORIGINS="https://model-technologie.com:3001,https://www.model-technologie.com:3001,http://staging.model-technologie.com:3001"
+      - SPRING_PROFILES_ACTIVE=staging
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/model_tech_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=s%Po&54VYGMgE5fu
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - JWT_SECRET=wTd342jUO9OrDkkmLVregA3upRLCiv0rDzxw4ZHUgFg=
+      - JAVA_OPTS= -Xmx512m -Xms256m -XX:+UseG1GC
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - dokploy-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: model-tech-frontend
+    environment:
+      VITE_API_URL: https://staging.model-technologie.com/api
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    networks:
+      - dokploy-network
+    restart: unless-stopped
+
+  adminer:
+    image: adminer:latest
+    container_name: mtech-adminer
+    ports:
+      - "8081:8080"
+    environment:
+      # Pré-remplir les informations de connexion
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres_data:
+
+networks:
+  dokploy-network:
+    external: true

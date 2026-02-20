@@ -1,0 +1,102 @@
+spring:
+  application:
+    name: Model Technologie Backend
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/model_tech_dev
+    username: postgres
+    password: postgres_dev_password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+    open-in-view: false
+
+
+  # ⚠️ DÉSACTIVER FLYWAY EN DEV
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    encoding: UTF-8
+    schemas: public
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+logging:
+  level:
+    root: INFO
+    com.modeltechnologie: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+jwt:
+  # Clé de dev encodée en Base64 (64 octets = 512 bits pour HS512).
+  # NE PAS utiliser en staging/prod.
+  # Pour générer une clé de production : openssl rand -base64 64
+  secret: dGhpcyppc3BhZGV2c2VjcmV0a2V5Zm9ybW9kZWx0ZWNobm9sb2dpZWJhY2tlbmQyMDI1bm90Zm9ycHJvZHVjdGlvbg==
+  expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+info:
+  app:
+    name: Model Technologie Backend
+    version: 0.1.0
+
+app:
+  cors:
+    # ✅ En développement: accepter localhost et 127.0.0.1
+    allowedOrigins:
+      - "http://localhost:3000"
+      - "http://localhost:80"
+      - "http://localhost"
+      - "http://127.0.0.1:3000"
+      - "http://127.0.0.1:80"
+      - "http://127.0.0.1"
+
+    # ✅ Toutes les méthodes HTTP
+    allowedMethods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+      - "PATCH"
+
+    # ✅ Tous les headers
+    allowedHeaders:
+      - "*"
+
+    # ✅ Autoriser les credentials (cookies, JWT)
+    allowCredentials: true
+
+    # ✅ Cache preflight de 1 heure
+    maxAge: 3600

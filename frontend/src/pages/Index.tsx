@@ -5,7 +5,6 @@ import { ServicesSection } from "@/components/home/ServicesSection";
 import { ReferencesSection } from "@/components/home/ReferencesSection";
 import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 import { CTASection } from "@/components/home/CTASection";
-import Alumni from "@/pages/Alumni.tsx";
 
 const Index = () => {
   return (

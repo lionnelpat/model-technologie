@@ -1,0 +1,136 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database (Production)
+  postgres:
+    image: postgres:16-alpine
+    container_name: model-tech-postgres-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS:-}
+    # Pas de 'ports' : PostgreSQL n'est accessible que depuis le réseau Docker interne.
+    # Le backend communique via le hostname 'postgres' sur le réseau model-tech-network.
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./postgres/backups:/backups
+    networks:
+      - model-tech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      # Production security settings
+      POSTGRES_INITDB_ARGS: "-c max_connections=200 -c shared_buffers=256MB -c effective_cache_size=1GB"
+
+  # Spring Boot Backend (Production)
+  backend:
+    image: ${REGISTRY}/lionnelpat/model-technologie-backend:${BACKEND_TAG:-latest}
+    container_name: model-tech-backend-prod
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      JAVA_OPTS: "-Xmx1g -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ParallelRefProcEnabled"
+      LOG_LEVEL: WARN
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    # Pas de 'ports' : le backend est accessible uniquement via Nginx sur le réseau interne.
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - model-tech-network
+    volumes:
+      - ./logs:/home/deploy/model-tech/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+    security_opt:
+      - no-new-privileges:true
+
+  # React Frontend (Production)
+  frontend:
+    image: ${REGISTRY}/lionnelpat/model-technologie-frontend:${FRONTEND_TAG:-latest}
+    container_name: model-tech-frontend-prod
+    environment:
+      VITE_API_URL: https://${DOMAIN_PROD}/api
+    # Pas de 'ports' : le frontend est servi via Nginx sur le réseau interne.
+    depends_on:
+      - backend
+    networks:
+      - model-tech-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+
+  # Nginx Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: model-tech-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - model-tech-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  model-tech-network:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
